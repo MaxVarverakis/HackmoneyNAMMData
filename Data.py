@@ -86,6 +86,6 @@ plt.xlabel('Amount of A')
 plt.ylabel('Slippage (%)')
 plt.show()
 
-# price = [d.price(i) for i in delA]
+price = [d.price(i) for i in delA]
 # plt.plot(delA, price)
 # plt.show()
