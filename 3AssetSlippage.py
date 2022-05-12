@@ -68,7 +68,7 @@ class data_ay():
 
     # def limit(self, delA):
     #   y0 = self.y
-    #   y0 = y0 - self.quantity(delA).x[0]
+    #   y0 = y0 - self.quantity(delA)
     #   if int(y0) > 0:
     #     print(1) 
     #   else:
@@ -106,7 +106,7 @@ class data_ab():
 if __name__ == '__main__':
 
     d = data_ay(.2, .8, 10, 10, 10)
-    UStart = d.Ufun(d.a, d.b, d.y)
+    # UStart = d.Ufun(d.a, d.b, d.y)
     # print(d.limit())
     # delY = d.quantity(3)
     # print(delY.x[0])
@@ -170,8 +170,6 @@ if __name__ == '__main__':
     # plt.show()
 
     b = data_ab(.2, .8, 10, 10, 10)
-    UStart = b.Ufun(b.a, b.b, b.y)
-    UStart
 
     # delB = b.quantity(2)
     # print(delB.x[0])
