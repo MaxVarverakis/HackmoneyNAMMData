@@ -53,6 +53,10 @@ class generalSlippage():
 
         return x0.real
     
+    def sameNestQuantities(self, da):
+        db = (self.a ** (1 - self.sigma) + self.b ** (1 - self.sigma) - (self.a + da) ** (1 - self.sigma)) ** (1 / (1 - self.sigma)) - self.b
+        return db
+
     def generalQ(self, **kwargs):
         '''
         Must set the following parameters:
@@ -170,12 +174,15 @@ if __name__ == '__main__':
     # plt.plot(np.linspace(-10, 10, 100), np.zeros(100), 'k:')
     # plt.show()
 
-    bools = []
     for i in range(10):
-        bools.append(d.manualRoots(da = i, dy = None) - d.quantity(i, 'a', 'y') < 1e-10)
-        bools.append(d.generalP(da = i, dy = None) - d.price(i, 'a', 'y') < 1e-10)
-        bools.append(d.generalS(da = i, dy = None) - d.slippage(i, 'a', 'y') < 1e-10)
-    print(np.all(bools))
+        print(d.sameNestQuantities(i), d.quantity(i, 'a', 'b'))
+
+    # bools = []
+    # for i in range(10):
+    #     bools.append(d.manualRoots(da = i, dy = None) - d.quantity(i, 'a', 'y') < 1e-10)
+    #     bools.append(d.generalP(da = i, dy = None) - d.price(i, 'a', 'y') < 1e-10)
+    #     bools.append(d.generalS(da = i, dy = None) - d.slippage(i, 'a', 'y') < 1e-10)
+    # print(np.all(bools))
 
     # outer = np.linspace(1.001, 11, 100)
     # inner = np.linspace(1.001, 11, 100)
