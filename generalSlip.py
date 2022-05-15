@@ -1,3 +1,4 @@
+import random
 import functools
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
@@ -20,9 +21,41 @@ class generalSlippage():
         UStart = self.Ufun(self.a, self.b, self.y)
         return self.Ufun(self.a + da, self.b + db, self.y + dy) - UStart
 
+    def manualRoots(self, **kwargs):
+        '''
+        Newton's method for finding root of diff function
+        Must set the following parameters:
+            dx = x
+                the amount of x (a, b, or y) to be added
+            dz = None
+                z is the asset to be swapped (a, b, or y) for x
+
+            For example, if you want to add 1 `a` to a and swap it for `y`:
+                generalQ(da = 1, dy = None)
+        '''
+        assets = {'da': 0, 'db': 0, 'dy': 0}
+        
+        for key in kwargs.keys():
+            if key in assets.keys() and kwargs[key] is not None:
+                assets[key] = kwargs[key]
+                x0 = assets[key]
+            elif kwargs[key] is None:
+                k = key
+
+        while abs(self.diff(**assets)) > 1e-10:
+            y0 = self.diff(**assets)
+            assets[k] += 1e-1
+            x1 = assets[k]
+            y1 = self.diff(**assets)
+            deriv = 100 * (y1 - y0) / (x1 - x0)
+            x0 -= y0 / deriv
+            assets[k] = x0
+
+        return x0.real
+    
     def generalQ(self, **kwargs):
         '''
-        Must set the following variables:
+        Must set the following parameters:
             dx = x
                 the amount of x (a, b, or y) to be added
             dz = None
@@ -109,7 +142,7 @@ class generalSlippage():
                 delA = 0
                 delY = opt.root(lambda delB: self.Ufun(self.a - delA, self.b - delB, self.y + delY) - UStart, 3)
                 return delB.x[0]
-            
+
     def price(self, delX, X, Z):
         delZ = self.quantity(delX, X, Z)
         price = delX / delZ
@@ -122,34 +155,26 @@ class generalSlippage():
         '''
         return (self.price(delX, X, Z) / self.price(1, X, Z) - 1) * 100
 
-# def testU(**kwargs):
-#         d = generalSlippage(0.2, 0.8, 10, 10, 10)
-#         UStart = d.Ufun(d.a, d.b, d.y)
-
-#         assets = {'a': 0, 'b': 0, 'y': 0}
-
-#         for key in kwargs.keys():
-#             if key in assets.keys():
-#                 assets[key] = kwargs[key]
-#             else:
-#                 assets[key] = key
-
-#         return opt.root(d.Ufun(d.a + assets['a'], d.b + assets['b'], d.y + assets['c']) - UStart)
-
-# def partial(*kwargs):
-#     f = functools.partial(testU, delta)
-#     for delta in kwargs:
-#         f = functools.partial(f, delta)
-    # return functools.partial(testU, delta)
-
 if __name__ == '__main__':
     d = generalSlippage(0.2, 0.8, 10, 10, 10)
     
+    # bools = []
+    # for i in range(10):
+    #     bools.append(d.manualRoots(da = i, dy = None)- d.quantity(i, 'a', 'y') < 1e-10)
+    # print(np.all(bools))
+
+    # ay_diffs = [d.diff(1, 0, x) for x in np.linspace(-10, 10, 100)]
+    # ab_diffs = [d.diff(1, x, 0) for x in np.linspace(-10, 10, 100)]
+    # plt.plot(np.linspace(-10, 10, 100), np.multiply(ay_diffs, 10))
+    # plt.plot(np.linspace(-10, 10, 100), np.multiply(ab_diffs, 10))
+    # plt.plot(np.linspace(-10, 10, 100), np.zeros(100), 'k:')
+    # plt.show()
+
     bools = []
     for i in range(10):
-        bools.append(d.generalQ(da = i, dy = None) - d.quantity(i, 'a', 'y') < 1e-5)
-        bools.append(d.generalP(da = i, dy = None) - d.price(i, 'a', 'y') < 1e-5)
-        bools.append(d.generalS(da = i, dy = None) - d.slippage(i, 'a', 'y') < 1e-5)
+        bools.append(d.manualRoots(da = i, dy = None) - d.quantity(i, 'a', 'y') < 1e-10)
+        bools.append(d.generalP(da = i, dy = None) - d.price(i, 'a', 'y') < 1e-10)
+        bools.append(d.generalS(da = i, dy = None) - d.slippage(i, 'a', 'y') < 1e-10)
     print(np.all(bools))
 
     # outer = np.linspace(1.001, 11, 100)
