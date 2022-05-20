@@ -1,3 +1,7 @@
+import pandas as pd
+import csv
+from StableSwapSlip import stable
+from UniswapSlip import uni
 import random
 import functools
 import scipy.optimize as opt
@@ -41,8 +45,8 @@ class generalSlippage():
                 x0 = assets[key]
             elif kwargs[key] is None:
                 k = key
-
-        while abs(self.diff(**assets)) > 1e-10:
+        # i = 0
+        while abs(self.diff(**assets)) > 1e-2:
             y0 = self.diff(**assets)
             assets[k] += 1e-1
             x1 = assets[k]
@@ -50,6 +54,8 @@ class generalSlippage():
             deriv = 100 * (y1 - y0) / (x1 - x0)
             x0 -= y0 / deriv
             assets[k] = x0
+            # print(i)
+            # i += 1
 
         return x0.real
     
@@ -91,14 +97,15 @@ class generalSlippage():
 
     def generalS(self, **kwargs):
         '''
-        Returns the slippage in percent between kwarg 1 and kwarg 2
+        Returns the slippage in decimal between kwarg 1 and kwarg 2
         '''
         
         current = self.generalP(**kwargs)
         kwargs[list(kwargs.keys())[0]] = 1
         ref = self.generalP(**kwargs)
 
-        return (current / ref - 1) * 100
+        # return (current / ref - 1) * 100
+        return ref / current
 
     def quantity(self, delX, X, Z):
         '''
@@ -160,12 +167,60 @@ class generalSlippage():
         return (self.price(delX, X, Z) / self.price(1, X, Z) - 1) * 100
 
 if __name__ == '__main__':
-    d = generalSlippage(0.2, 0.8, 10, 10, 10)
     
+    d = generalSlippage(0.2, 0.8, 10, 10, 10)
+    s = stable(1, 5, 5)
+    u = uni(100, 5, 5)
+    x = np.linspace(1, 8.25, 100)
+    ax = plt.gca()
+    plt.plot(x, [u.generalS(da = i, db = None) for i in x], label = 'Uniswap 100x Leverage')
+    u = uni(1, 5, 5)
+    plt.plot(x, [u.generalS(da = i, db = None) for i in x], label = 'Uniswap 1x Leverage')
+    plt.plot(x, [s.generalS(da = i, db = None) for i in x], label = 'Stableswap Invariant: 1x amplification')
+    plt.plot(1, 1, 'b', alpha = .6, label = 'Stableswap Invariant: 100x amplification')
+
+    plt.plot(x, [d.generalS(da = i, dy = None) for i in x], label = 'A <--> Y')
+    plt.plot(x, [d.generalS(da = i, db = None) for i in x], 'k', label = 'A <--> B')
+    # s = stable(100, 5, 5)
+    # plt.plot(x, [s.generalS(da = i, db = None) for i in x], label = 'Stableswap Invariant: 100x amplification')
+    plt.tight_layout()
+    plt.legend(loc = 3, prop = {'size': 20})
+    plt.title('Comparing slippage rates of different invariants')
+    plt.xlabel('Amount of assets being swapped')
+    plt.ylabel('Price Slippage')
+    plt.show()
+
+    # d = generalSlippage(0.2, 0.8, 10, 10, 10)
+    # s = stable(1, 5, 5)
+    # u = uni(100, 5, 5)
+    # x = np.linspace(1, 8.25, 100)
+    
+    # u1 = [u.generalS(da = i, db = None) for i in x]
+    # u = uni(1, 5, 5)
+    # u2 = [u.generalS(da = i, db = None) for i in x]
+    # s = [s.generalS(da = i, db = None) for i in x]
+    # d1 = [d.generalS(da = i, dy = None) for i in x]
+    # d2 = [d.generalS(da = i, db = None) for i in x]
+
+    # data = {'Uniswap 100x Leverage': u1, 'Uniswap 1x Leverage': u2, 'Stableswap Invariant: 1x amplification': s, 'A <--> Y': d1, 'A <--> B': d2}
+    # df = pd.DataFrame(data)
+    # df.to_csv('SlippageData.csv')
+
     # bools = []
-    # for i in range(10):
+    # for i in range(2):
     #     bools.append(d.manualRoots(da = i, dy = None)- d.quantity(i, 'a', 'y') < 1e-10)
     # print(np.all(bools))
+
+    # plt.plot(x, [u.generalQ(da = i, db = None) for i in x], label = 'Uniswap : X * Y = constant')
+    # plt.plot(x, [s.generalQ(da = i, db = None) for i in x], label = 'StableSwap Invariant')
+    # plt.plot(x, [d.generalQ(da = i, dy = None) for i in x], label = 'A <--> Y')
+    # plt.plot(x, [d.generalQ(da = i, db = None) for i in x], label = 'A <--> B')
+    # plt.title('Comparing exchange rates for different market makers')
+    # plt.xlabel('Amount of assets being swapped')
+    # plt.ylabel('Exchange rate')
+    # plt.legend()
+    # plt.show()
+
 
     # ay_diffs = [d.diff(1, 0, x) for x in np.linspace(-10, 10, 100)]
     # ab_diffs = [d.diff(1, x, 0) for x in np.linspace(-10, 10, 100)]
@@ -174,8 +229,8 @@ if __name__ == '__main__':
     # plt.plot(np.linspace(-10, 10, 100), np.zeros(100), 'k:')
     # plt.show()
 
-    for i in range(10):
-        print(d.sameNestQuantities(i), d.quantity(i, 'a', 'b'))
+    # for i in range(10):
+    #     print(d.sameNestQuantities(i), d.quantity(i, 'a', 'b'))
 
     # bools = []
     # for i in range(10):
